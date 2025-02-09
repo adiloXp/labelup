@@ -7,11 +7,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
   if (currentCategory) {
     categoryList.style.display = 'flex';
-    document.querySelectorAll('.category-item a').forEach(link => {
-      if (link.getAttribute('data-category') !== currentCategory) {
-        link.parentElement.style.display = 'none'; // إخفاء غير التصنيف الحالي
-      }
-    });
+
+    // تأجيل عملية تحديد التصنيفات إلى وقت غير مشغول
+    setTimeout(function() {
+      document.querySelectorAll('.category-item a').forEach(link => {
+        if (link.getAttribute('data-category') !== currentCategory) {
+          link.parentElement.style.display = 'none'; // إخفاء غير التصنيف الحالي
+        }
+      });
+    }, 0); // تحديد تأخير بسيط (0ms) لضمان تحسين الأداء
   } else {
     categoryList.style.display = 'none';
   }
