@@ -1,46 +1,53 @@
 document.addEventListener("DOMContentLoaded", function () {
     // الكود الخاص بالسلايدر
     if (window.location.pathname === "/") {
-        fetch('/feeds/posts/default/-/Mens-Best?alt=json&max-results=10')
+        fetch('/feeds/posts/default/-/electronics?alt=json&max-results=10')
             .then(response => response.json())
             .then(data => {
-                var posts = data.feed.entry;
-                var sliderContent = document.getElementById("slider-content");
-                var sliderContainer = document.getElementById("mens-best-slider");
+                const posts = data.feed.entry;
+                const sliderContent = document.getElementById("slider-content");
+                const sliderContainer = document.getElementById("mens-best-slider");
 
                 if (posts && sliderContent && sliderContainer) {
-                    posts.forEach(post => {
-                        var title = post.title.$t;
-                        var link = post.link.find(l => l.rel === "alternate").href;
-                        var imgSrc = post.media$thumbnail ? post.media$thumbnail.url.replace("s72-c", "s800") : "https://via.placeholder.com/800";
+                    // استخدام DocumentFragment لتجميع العناصر قبل إضافتها إلى DOM
+                    const fragment = document.createDocumentFragment();
 
-                        var slide = document.createElement("div");
+                    posts.forEach(post => {
+                        const title = post.title.$t;
+                        const link = post.link.find(l => l.rel === "alternate").href;
+                        const imgSrc = post.media$thumbnail ? post.media$thumbnail.url.replace("s72-c", "s800") : "https://via.placeholder.com/800";
+
+                        const slide = document.createElement("div");
                         slide.className = "slide";
                         slide.innerHTML = `
                             <a href="${link}">
-                                <img src="${imgSrc}" alt="${title}">
+                                <img src="${imgSrc}" alt="${title}" loading="lazy">
                                 <div class="slide-title">${title}</div>
                             </a>
                         `;
-                        sliderContent.appendChild(slide);
+                        fragment.appendChild(slide);
                     });
 
+                    sliderContent.appendChild(fragment);
                     sliderContainer.style.display = "block";
                 }
             })
             .catch(error => console.error("Error fetching posts:", error));
 
         // تحريك السلايدر بسرعة وسلاسة
-        var currentIndex = 0;
+        let currentIndex = 0;
+        let slider, slides;
+
+        function initializeSlider() {
+            slider = document.querySelector(".slider");
+            slides = document.querySelectorAll(".slide");
+        }
 
         function moveSlide(dir) {
-            var slider = document.querySelector(".slider");
-            var slides = document.querySelectorAll(".slide");
+            if (!slides || slides.length === 0) return; // تفادي الخطأ إذا لم يتم تحميل الشرائح
 
-            if (slides.length === 0) return; // تفادي الخطأ إذا لم يتم تحميل الشرائح
-
-            var totalSlides = slides.length;
-            var slideWidth = slides[0].offsetWidth;
+            const totalSlides = slides.length;
+            const slideWidth = slides[0].offsetWidth;
 
             currentIndex += dir;
             currentIndex = Math.max(0, Math.min(currentIndex, totalSlides - visibleSlides())); // الحد من الحركة الزائدة
@@ -51,13 +58,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function visibleSlides() {
             // تحديد عدد الشرائح التي يجب عرضها بناءً على عرض الشاشة
-            if (window.innerWidth <= 768) return 3; // عرض 3 شرائح في الهواتف
-            else return 4; // عرض 4 شرائح على الشاشات الأكبر
+            return window.innerWidth <= 768 ? 4 : 4; // عرض 3 شرائح في الهواتف، و4 على الشاشات الأكبر
         }
 
         // دعم اللمس مع تحسين السرعة والسلاسة
         let startX = 0, endX = 0;
-        let sliderContainer = document.querySelector(".slider-container");
+        const sliderContainer = document.querySelector(".slider-container");
 
         if (sliderContainer) {
             sliderContainer.addEventListener("touchstart", function (event) {
@@ -69,12 +75,15 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             sliderContainer.addEventListener("touchend", function () {
-                let diff = startX - endX;
+                const diff = startX - endX;
 
                 if (diff > 50) moveSlide(1); // السحب لليسار -> انتقال للصورة التالية
                 else if (diff < -50) moveSlide(-1); // السحب لليمين -> انتقال للصورة السابقة
             });
         }
+
+        // تهيئة السلايدر بعد تحميل الصفحة
+        initializeSlider();
     }
 
     // الكود الخاص بعرض التصنيفات
