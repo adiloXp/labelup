@@ -3,18 +3,23 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!categoryList) return;
 
     const path = window.location.pathname;
-    const currentCategory = path.split('/search/label/')[1]; // استخراج اسم التصنيف من الرابط
+    const currentCategory = path.includes('/search/label/') ? path.split('/search/label/')[1] : null;
 
-    if (currentCategory) {
-        categoryList.style.display = 'flex'; // إظهار قائمة التصنيفات
+    // استخدم requestAnimationFrame لضمان تحديث سلس لـ DOM
+    requestAnimationFrame(() => {
+        categoryList.classList.toggle('active', !!currentCategory);
 
-        // إخفاء العناصر غير المرتبطة بالتصنيف الحالي
-        document.querySelectorAll('.category-item a').forEach(link => {
-            if (link.getAttribute('data-category') !== currentCategory) {
-                link.parentElement.style.display = 'none';
+        if (currentCategory) {
+            let hiddenCount = 0;
+            document.querySelectorAll('.category-item a').forEach(link => {
+                const isMatch = link.getAttribute('data-category') === currentCategory;
+                link.parentElement.style.display = isMatch ? 'block' : 'none';
+                if (!isMatch) hiddenCount++;
+            });
+
+            if (hiddenCount === document.querySelectorAll('.category-item a').length) {
+                categoryList.style.display = 'none'; // إخفاء إذا لم يكن هناك تصنيفات متوافقة
             }
-        });
-    } else {
-        categoryList.style.display = 'none'; // إخفاء القائمة إذا لم يكن هناك تصنيف محدد
-    }
+        }
+    });
 });
